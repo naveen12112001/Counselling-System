@@ -2,6 +2,7 @@ import { getAnalytics } from "firebase/analytics";
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getDatabase } from "firebase/database";
+import { getStorage } from "firebase/storage";
 const firebaseConfig = {
   apiKey: "AIzaSyBre1_KCx6CYItgOatV5HfKP3iYAak_r-Y",
   authDomain: "counselling-system-7d104.firebaseapp.com",
