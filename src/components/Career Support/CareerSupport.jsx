@@ -18,6 +18,52 @@ import { auth } from "../../firebase/auth";
 import Footer from "../Footer/Footer";
 import { toast } from "react-toastify";
 
+// import { google } from "googleapis";
+
+// const createMeetLink = async () => {
+//   try {
+//     const auth = new google.auth.OAuth2(
+//       "YOUR_CLIENT_ID",
+//       "YOUR_CLIENT_SECRET",
+//       "YOUR_REDIRECT_URI"
+//     );
+
+//     auth.setCredentials({
+//       refresh_token: "YOUR_REFRESH_TOKEN",
+//     });
+
+//     const calendar = google.calendar({ version: "v3", auth });
+
+//     const event = {
+//       summary: "Career Support Meeting",
+//       description: "Discussion regarding career guidance.",
+//       start: {
+//         dateTime: new Date().toISOString(),
+//         timeZone: "Asia/Kolkata",
+//       },
+//       end: {
+//         dateTime: new Date(new Date().getTime() + 60 * 60 * 1000).toISOString(),
+//         timeZone: "Asia/Kolkata",
+//       },
+//       conferenceData: {
+//         createRequest: {
+//           requestId: "meet-" + Math.random().toString(36).substr(2, 9),
+//         },
+//       },
+//     };
+
+//     const response = await calendar.events.insert({
+//       calendarId: "primary",
+//       resource: event,
+//       conferenceDataVersion: 1,
+//     });
+
+//     return response.data.hangoutLink; // This is the Google Meet link
+//   } catch (error) {
+//     console.error("Error creating Meet link:", error);
+//   }
+// };
+
 const CareerSupport = () => {
   const [formData, setFormData] = useState({
     name: "",
