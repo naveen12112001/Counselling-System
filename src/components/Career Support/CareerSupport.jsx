@@ -8,61 +8,64 @@ import React, {
 import "./CareerSupport.css";
 import Navbar from "../Navbar/Navbar";
 import Logo from "../../assets/logo.webp";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Switch } from "antd";
-import { ThemeContext } from "../../App";
-import { signOut } from "firebase/auth";
+import { useNavigate} from "react-router-dom";
 import { getDatabase, ref, push, set, get } from "firebase/database";
 import emailjs from "emailjs-com";
 import { auth } from "../../firebase/auth";
 import Footer from "../Footer/Footer";
-import { toast } from "react-toastify";
+import { google } from "googleapis";
+import axios from "axios";
 
-// import { google } from "googleapis";
+const createMeetLink = async () => {
+  try {
+    // 🔹 Refresh access token using refresh token
+    const { data } = await axios.post("https://oauth2.googleapis.com/token", {
+      client_id: CLIENT_ID,
+      client_secret: CLIENT_SECRET,
+      refresh_token: REFRESH_TOKEN,
+      grant_type: "refresh_token",
+    });
 
-// const createMeetLink = async () => {
-//   try {
-//     const auth = new google.auth.OAuth2(
-//       "YOUR_CLIENT_ID",
-//       "YOUR_CLIENT_SECRET",
-//       "YOUR_REDIRECT_URI"
-//     );
+    const accessToken = data.access_token;
 
-//     auth.setCredentials({
-//       refresh_token: "YOUR_REFRESH_TOKEN",
-//     });
+    // 🔹 Authenticate Google API client
+    const auth = new google.auth.OAuth2();
+    auth.setCredentials({ access_token: accessToken });
 
-//     const calendar = google.calendar({ version: "v3", auth });
+    const calendar = google.calendar({ version: "v3", auth });
 
-//     const event = {
-//       summary: "Career Support Meeting",
-//       description: "Discussion regarding career guidance.",
-//       start: {
-//         dateTime: new Date().toISOString(),
-//         timeZone: "Asia/Kolkata",
-//       },
-//       end: {
-//         dateTime: new Date(new Date().getTime() + 60 * 60 * 1000).toISOString(),
-//         timeZone: "Asia/Kolkata",
-//       },
-//       conferenceData: {
-//         createRequest: {
-//           requestId: "meet-" + Math.random().toString(36).substr(2, 9),
-//         },
-//       },
-//     };
+    // 🔹 Create Google Meet Event
+    const event = {
+      summary: "Career Support Meeting",
+      description: "Discussion regarding career guidance.",
+      start: {
+        dateTime: new Date().toISOString(),
+        timeZone: "Asia/Kolkata",
+      },
+      end: {
+        dateTime: new Date(new Date().getTime() + 60 * 60 * 1000).toISOString(),
+        timeZone: "Asia/Kolkata",
+      },
+      conferenceData: {
+        createRequest: {
+          requestId: "meet-" + Math.random().toString(36).substr(2, 9),
+          conferenceSolutionKey: { type: "hangoutsMeet" },
+        },
+      },
+    };
 
-//     const response = await calendar.events.insert({
-//       calendarId: "primary",
-//       resource: event,
-//       conferenceDataVersion: 1,
-//     });
+    const response = await calendar.events.insert({
+      calendarId: "primary",
+      resource: event,
+      conferenceDataVersion: 1,
+      sendUpdates: "all",
+    });
 
-//     return response.data.hangoutLink; // This is the Google Meet link
-//   } catch (error) {
-//     console.error("Error creating Meet link:", error);
-//   }
-// };
+    return response.data.hangoutLink; // Return the Meet link
+  } catch (error) {
+    console.error("Error creating Meet link:", error.response?.data || error);
+  }
+};
 
 const CareerSupport = () => {
   const [formData, setFormData] = useState({
@@ -82,31 +85,43 @@ const CareerSupport = () => {
       [name]: value,
     }));
   };
-  const handleSendMeetLink = (queryEmail) => {
+  const handleSendMeetLink = async (queryEmail) => {
     const currentUser = auth.currentUser;
     if (!currentUser) {
       console.error("No logged-in user found.");
       return;
     }
-    const senderEmail = currentUser.email;
-    const name = currentUser.displayName;
-    const meetLink = "https://meet.google.com/new"; // Generate a new link if needed
-    const params = {
-      to_email: queryEmail,
-      name,
-      counsellor_email: senderEmail,
-      meet_link: meetLink,
-    };
-
-    emailjs
-      .send("service_kml145t", "template_meetlink", params, "uKqd3qDdMdOlj2TFh")
-      .then(() => {
-        setSelectedEmail(email);
-        setShowPopup(true);
-      })
-      .catch((error) => {
-        console.error("Email send error:", error);
-      });
+  
+    try {
+      // 🔹 Generate a Google Meet link
+      const meetLink = await createMeetLink();
+      if (!meetLink) {
+        console.error("Failed to create Google Meet link.");
+        return;
+      }
+  
+      // 🔹 Send the Meet link via EmailJS
+      const senderEmail = currentUser.email;
+      const name = currentUser.displayName;
+      const params = {
+        to_email: queryEmail,
+        name,
+        counsellor_email: senderEmail,
+        meet_link: meetLink, // Use the dynamically generated Meet link
+      };
+  
+      emailjs
+        .send("service_kml145t", "template_meetlink", params, "uKqd3qDdMdOlj2TFh")
+        .then(() => {
+          setSelectedEmail(queryEmail);
+          setShowMeetPopup(true);
+        })
+        .catch((error) => {
+          console.error("Email send error:", error);
+        });
+    } catch (error) {
+      console.error("Error sending meet link:", error);
+    }
   };
   const closeMeetPopup = () => {
     setShowMeetPopup(false);
