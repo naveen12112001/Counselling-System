@@ -14,10 +14,5 @@ export default defineConfig({
   rollupOptions: {
     input: "index.html", // Ensure Vite finds the entry file
   },
-  build: {
-    rollupOptions: {
-      external: ["googleapis"],
-    },
-  },
   plugins: [react()],
 });
