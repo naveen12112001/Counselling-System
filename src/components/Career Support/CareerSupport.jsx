@@ -13,16 +13,16 @@ import { getDatabase, ref, push, set, get } from "firebase/database";
 import emailjs from "emailjs-com";
 import { auth } from "../../firebase/auth";
 import Footer from "../Footer/Footer";
-import {google} from "gapi-script";
 import axios from "axios";
+import { google } from "googleapis";
 
 const createMeetLink = async () => {
   try {
     // 🔹 Refresh access token using refresh token
     const { data } = await axios.post("https://oauth2.googleapis.com/token", {
-      client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET,
-      refresh_token: REFRESH_TOKEN,
+      client_id: import.meta.env.CLIENT_ID,
+      client_secret: import.meta.env.CLIENT_SECRET,
+      refresh_token: import.meta.env.REFRESH_TOKEN,
       grant_type: "refresh_token",
     });
 
