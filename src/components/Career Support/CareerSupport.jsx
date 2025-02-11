@@ -13,28 +13,12 @@ import { getDatabase, ref, push, set, get } from "firebase/database";
 import emailjs from "emailjs-com";
 import { auth } from "../../firebase/auth";
 import Footer from "../Footer/Footer";
-import axios from "axios";
-import { google } from "googleapis";
+import { initializeGapi,signIn } from "../../../googleAuth";
 
 const createMeetLink = async () => {
   try {
-    // 🔹 Refresh access token using refresh token
-    const { data } = await axios.post("https://oauth2.googleapis.com/token", {
-      client_id: import.meta.env.VITE_CLIENT_ID,
-      client_secret: import.meta.env.VITE_CLIENT_SECRET,
-      refresh_token: import.meta.env.VITE_REFRESH_TOKEN,
-      grant_type: "refresh_token",
-    });
+    await signIn(); // Ensure user is authenticated
 
-    const accessToken = data.access_token;
-
-    // 🔹 Authenticate Google API client
-    const auth = new google.auth.OAuth2();
-    auth.setCredentials({ access_token: accessToken });
-
-    const calendar = google.calendar({ version: "v3", auth });
-
-    // 🔹 Create Google Meet Event
     const event = {
       summary: "Career Support Meeting",
       description: "Discussion regarding career guidance.",
@@ -54,16 +38,17 @@ const createMeetLink = async () => {
       },
     };
 
-    const response = await calendar.events.insert({
+    const response = await gapi.client.calendar.events.insert({
       calendarId: "primary",
       resource: event,
       conferenceDataVersion: 1,
       sendUpdates: "all",
     });
 
-    return response.data.hangoutLink; // Return the Meet link
+    console.log("Google Meet Link:", response.result.hangoutLink);
+    return response.result.hangoutLink;
   } catch (error) {
-    console.error("Error creating Meet link:", error.response?.data || error);
+    console.error("Error creating Meet link:", error);
   }
 };
 
@@ -91,15 +76,14 @@ const CareerSupport = () => {
       console.error("No logged-in user found.");
       return;
     }
-  
+
     try {
-      // 🔹 Generate a Google Meet link
       const meetLink = await createMeetLink();
       if (!meetLink) {
         console.error("Failed to create Google Meet link.");
         return;
       }
-  
+
       // 🔹 Send the Meet link via EmailJS
       const senderEmail = currentUser.email;
       const name = currentUser.displayName;
@@ -107,9 +91,9 @@ const CareerSupport = () => {
         to_email: queryEmail,
         name,
         counsellor_email: senderEmail,
-        meet_link: meetLink, // Use the dynamically generated Meet link
+        meet_link: meetLink,
       };
-  
+
       emailjs
         .send("service_kml145t", "template_meetlink", params, "uKqd3qDdMdOlj2TFh")
         .then(() => {
@@ -123,9 +107,7 @@ const CareerSupport = () => {
       console.error("Error sending meet link:", error);
     }
   };
-  const closeMeetPopup = () => {
-    setShowMeetPopup(false);
-  };
+
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
@@ -136,15 +118,10 @@ const CareerSupport = () => {
             const queriesSnap = await get(queriesRef);
             if (queriesSnap.exists()) {
               const queriesArray = Object.entries(queriesSnap.val()).map(
-                ([id, data]) => ({
-                  id,
-                  ...data,
-                })
+                ([id, data]) => ({ id, ...data })
               );
               setQueries(queriesArray);
-              console.log(queriesArray);
             } else {
-              console.log("No user data available");
               setQueries([]);
             }
           } catch (error) {
@@ -156,7 +133,11 @@ const CareerSupport = () => {
     });
 
     return () => unsubscribe();
-  }, [auth, navigate]);
+  }, []);
+
+  useEffect(() => {
+    initializeGapi();
+  }, []);
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -336,7 +317,7 @@ const CareerSupport = () => {
               <div className="meet_popup-content">
                 <h2>Meet Link Sent!</h2>
                 <p>The Google Meet link has been sent to {selectedEmail}.</p>
-                <button onClick={closeMeetPopup}>Close</button>
+                <button onClick={()=>setShowMeetPopup(false)}>Close</button>
               </div>
             </div>
           )}
