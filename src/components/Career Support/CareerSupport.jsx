@@ -20,9 +20,9 @@ const createMeetLink = async () => {
   try {
     // 🔹 Refresh access token using refresh token
     const { data } = await axios.post("https://oauth2.googleapis.com/token", {
-      client_id: import.meta.env.CLIENT_ID,
-      client_secret: import.meta.env.CLIENT_SECRET,
-      refresh_token: import.meta.env.REFRESH_TOKEN,
+      client_id: import.meta.env.VITE_CLIENT_ID,
+      client_secret: import.meta.env.VITE_CLIENT_SECRET,
+      refresh_token: import.meta.env.VITE_REFRESH_TOKEN,
       grant_type: "refresh_token",
     });
 
