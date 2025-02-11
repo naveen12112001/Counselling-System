@@ -51,7 +51,8 @@
     "remark-gfm": "^4.0.0",
     "slick-carousel": "^1.8.1",
     "typewriter-effect": "^2.21.0",
-    "uid": "^2.0.2"
+    "uid": "^2.0.2",
+    "vite-plugin-node-polyfills": "^0.23.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.11",
