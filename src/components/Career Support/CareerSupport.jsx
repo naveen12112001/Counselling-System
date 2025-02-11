@@ -13,7 +13,7 @@ import { getDatabase, ref, push, set, get } from "firebase/database";
 import emailjs from "emailjs-com";
 import { auth } from "../../firebase/auth";
 import Footer from "../Footer/Footer";
-import { google } from "googleapis";
+import {google} from "gapi-script";
 import axios from "axios";
 
 const createMeetLink = async () => {
