@@ -59,6 +59,6 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
     "react-toastify": "^10.0.5",
-    "vite": "^5.4.14"
+    "vite": "^7.1.3"
   }
 }
